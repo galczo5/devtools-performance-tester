@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>DevTools - Performance</title>
+
+    <link rel="stylesheet" href="./node_modules/tailwindcss/dist/base.css">
+    <link rel="stylesheet" href="./node_modules/tailwindcss/dist/utilities.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Josefin Sans', sans-serif;
+        }
+    </style>
+
+    <script case="Create a lot of objects" start="test1">
+function test1() {
+    for (let i = 0; i < 10; i++) {
+        const array = [];
+        for (let j = 0; j < 1000000; j++) {
+            const x = {
+                type: 'object',
+                status: 'waiting for gc',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+
+            array.push(x)
+        }
+    }
+
+    console.log('done');
+}
+    </script>
+
+    <script case="Create a lot of global objects" start="test2">
+window.array = [];
+function test2() {
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 1000000; j++) {
+            const x = {
+                type: 'object',
+                status: 'waiting for gc',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+
+            window.array.push(x)
+        }
+    }
+
+    console.log('done');
+}
+    </script>
+
+    <script case="Create a lot of div elements" start="test3">
+function test3() {
+    const wrapper = document.createElement('div');
+    document.body.appendChild(wrapper);
+
+    for (let i = 0; i < 1000; i++) {
+        const div = document.createElement('div');
+        wrapper.appendChild(div);
+    }
+
+    wrapper.remove();
+}
+    </script>
+
+    <script case="Three functions" start="test4">
+function shortFunction() {
+    for (let j = 0; j < 10; j++) {
+        console.log('shortFunction')
+    }
+}
+
+function longFunction() {
+    for (let j = 0; j < 1000; j++) {
+        console.log('longFunction')
+    }
+}
+
+function test4() {
+    shortFunction();
+    longFunction();
+    shortFunction();
+}
+    </script>
+
+</head>
+<body>
+
+    <div class="w-1/2 mx-auto mt-10">
+        <h1 class="text-2xl font-bold">DevTools - Performance - Test Cases</h1>
+
+        <div id="cases">
+
+        </div>
+
+    </div>
+
+    <script>
+
+        (function () {
+
+            const wrapper = document.getElementById('cases');
+
+            function template(name, code, fun) {
+                return `
+                <div class="mt-10">
+                    <h2 class="text-xl font-bold mb-2">${name}</h2>
+                    <button class="bg-green-100 rounded py-2 px-5 mr-2" onclick="${fun}()">Run</button>
+                    <pre class="bg-gray-100 rounded p-5 my-2"><code class="js">${code}</code></pre>
+                    <hr>
+                </div>
+                `;
+            }
+
+            const elements = document.head.querySelectorAll('script');
+            Array.from(elements)
+                .filter(script => script.getAttribute('case'))
+                .forEach(script => {
+                    const name = script.getAttribute('case');
+                    const fun = script.getAttribute('start');
+
+                    const divElement = document.createElement('div');
+                    const code = script.innerHTML
+                        .split('\n')
+                        .filter((value, index, array) => index !== 0 && index !== array.length - 1)
+                        .join('\n');
+
+                    divElement.innerHTML = template(name, code, fun);
+                    wrapper.appendChild(divElement);
+                })
+        })();
+
+    </script>
+
+</body>
+</html>
